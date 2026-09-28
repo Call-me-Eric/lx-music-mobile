@@ -5,6 +5,7 @@ import { storageDataPrefix } from '@/config/constant'
 import { gzipFile, readFile, temporaryDirectoryPath, unGzipFile, unlink, writeFile } from '@/utils/fs'
 import { getSystemLocales, isIgnoringBatteryOptimization, isNotificationsEnabled, requestNotificationPermission, requestIgnoreBatteryOptimization, shareText } from '@/utils/nativeModules/utils'
 import musicSdk from '@/utils/musicSdk'
+import { isBiliLoggedIn } from '@/utils/musicSdk/bili/account'
 import { getData, removeData, saveData } from '@/plugins/storage'
 import BackgroundTimer from 'react-native-background-timer'
 import { scaleSizeH, scaleSizeW, setSpText } from './pixelRatio'
@@ -138,6 +139,7 @@ export const toast = (message: string, duration: 'long' | 'short' = 'short', pos
 export const openUrl = async(url: string): Promise<void> => Linking.canOpenURL(url).then(async() => Linking.openURL(url))
 
 export const assertApiSupport = (source: LX.Source): boolean => {
+  if (source == 'bili') return isBiliLoggedIn()
   return source == 'local' || global.lx.qualityList[source] != null
 }
 

@@ -36,6 +36,10 @@ export class StateEvent extends Event {
     this.emit('apiSourceUpdated', source)
   }
 
+  biliAccountUpdated() {
+    this.emit('biliAccountUpdated')
+  }
+
   themeUpdated(theme: LX.ActiveTheme) {
     this.emit('themeUpdated', theme)
   }

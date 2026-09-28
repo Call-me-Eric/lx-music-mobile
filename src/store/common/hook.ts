@@ -1,6 +1,7 @@
 import { type COMPONENT_IDS } from '@/config/constant'
 import { useEffect, useState } from 'react'
 import state, { type InitState } from './state'
+import { assertApiSupport } from '@/utils/tools'
 
 export const useFontSize = () => {
   const [value, update] = useState(state.fontSize)
@@ -65,19 +66,21 @@ export const usePageVisible = (visibleNames: COMPONENT_IDS[], onChange: (visible
 
 
 export const useAssertApiSupport = (source: LX.Source) => {
-  const [value, update] = useState(global.lx.qualityList[source] != null || source == 'local')
+  const [value, update] = useState(() => assertApiSupport(source))
 
   useEffect(() => {
     const handleUpdate = () => {
-      update(global.lx.qualityList[source] != null || source == 'local')
+      update(assertApiSupport(source))
     }
+    handleUpdate()
 
     global.state_event.on('apiSourceUpdated', handleUpdate)
+    global.state_event.on('biliAccountUpdated', handleUpdate)
     return () => {
       global.state_event.off('apiSourceUpdated', handleUpdate)
+      global.state_event.off('biliAccountUpdated', handleUpdate)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [source])
 
   return value
 }

@@ -41,6 +41,12 @@ export const getBiliPlayHeaders = () => {
 
 export const getAccount = () => account
 
+export const isBiliLoggedIn = () => Boolean(account?.cookies?.SESSDATA)
+
+const emitAccountUpdated = () => {
+  global.state_event?.biliAccountUpdated?.()
+}
+
 export const loadAccount = async() => {
   if (loaded) return account
   if (loading) return loading
@@ -51,6 +57,7 @@ export const loadAccount = async() => {
       await saveData(storageDataPrefix.biliAccount, account)
     }
     loaded = true
+    emitAccountUpdated()
     return account
   }).finally(() => {
     loading = null
@@ -66,6 +73,7 @@ export const saveAccount = async(next) => {
   }
   loaded = true
   await saveData(storageDataPrefix.biliAccount, account)
+  emitAccountUpdated()
   return account
 }
 
@@ -76,6 +84,7 @@ export const logoutAccount = async() => {
   loaded = true
   if (buvid3) await saveData(storageDataPrefix.biliAccount, account)
   else await removeData(storageDataPrefix.biliAccount)
+  emitAccountUpdated()
   return account
 }
 

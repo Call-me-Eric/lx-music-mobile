@@ -10,6 +10,7 @@ import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import Text from '@/components/common/Text'
 import { showPactModal } from '@/core/common'
+import ForkNotice from '@/components/ForkNotice'
 
 // const qqGroupUrl = 'mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26jump_from%3Dwebapi%26k%3Du1zyxek8roQAwic44nOkBXtG9CfbAxFw'
 // const qqGroupUrl2 = 'mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26jump_from%3Dwebapi%26k%3D-l4kNZ2bPQAuvfCQFFhl1UoibvF5wcrQ'
@@ -62,6 +63,9 @@ export default memo(() => {
 
   return (
     <Section title={t('setting_about')}>
+      <View style={styles.notice}>
+        <ForkNotice />
+      </View>
       <View style={styles.part}>
         <Text style={styles.text} >本软件完全免费，代码已开源。开源地址：</Text>
         <TouchableOpacity onPress={openHomePage}>
@@ -119,6 +123,11 @@ export default memo(() => {
 })
 
 const styles = createStyle({
+  notice: {
+    marginLeft: 15,
+    marginRight: 15,
+    marginBottom: 10,
+  },
   part: {
     marginLeft: 15,
     marginRight: 15,

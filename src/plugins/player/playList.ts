@@ -4,6 +4,7 @@ import { defaultUrl } from '@/config'
 // import { action as playerAction } from '@/store/modules/player'
 import settingState from '@/store/setting/state'
 import playerState from '@/store/player/state'
+import { getBiliPlayHeaders } from '@/utils/musicSdk/bili/account'
 
 
 const list: LX.Player.Track[] = []
@@ -23,12 +24,14 @@ const formatMusicInfo = (musicInfo: LX.Player.PlayMusic) => {
     name: musicInfo.metadata.musicInfo.name,
     singer: musicInfo.metadata.musicInfo.singer,
     album: musicInfo.metadata.musicInfo.meta.albumName,
+    source: musicInfo.metadata.musicInfo.source,
   } : {
     id: musicInfo.id,
     pic: musicInfo.meta.picUrl,
     name: musicInfo.name,
     singer: musicInfo.singer,
     album: musicInfo.meta.albumName,
+    source: musicInfo.source,
   }
 }
 
@@ -47,6 +50,7 @@ const buildTracks = (musicInfo: LX.Player.PlayMusic, url?: LX.Player.Track['url'
   const artwork = isShowNotificationImage && mInfo.pic && httpRxp.test(mInfo.pic) ? mInfo.pic : undefined
   const lyric = getCurrentFullLyric(mInfo.id)
   if (url) {
+    const biliHeaders = mInfo.source == 'bili' && /^https?:\/\//.test(url) ? getBiliPlayHeaders() : undefined
     track.push({
       id: `${mInfo.id}__//${Math.random()}__//${url}`,
       url,
@@ -54,7 +58,8 @@ const buildTracks = (musicInfo: LX.Player.PlayMusic, url?: LX.Player.Track['url'
       artist: mInfo.singer || 'Unknow',
       album,
       artwork,
-      userAgent: defaultUserAgent,
+      userAgent: biliHeaders?.['User-Agent'] || defaultUserAgent,
+      ...(biliHeaders ? { headers: biliHeaders } : {}),
       musicId: mInfo.id,
       lyric,
       // original: { ...musicInfo },

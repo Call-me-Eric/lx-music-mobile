@@ -77,7 +77,9 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
       { action: 'changePosition', label: t('change_position') },
       { action: 'toggleSource', label: t('toggle_source') },
       { action: 'copyName', label: t('copy_name') },
-      { action: 'musicSourceDetail', disabled: isLocal, label: t('music_source_detail') },
+      musicInfo.source == 'bili'
+        ? { action: 'openSourceVideo', label: t('open_source_video') }
+        : { action: 'musicSourceDetail', disabled: isLocal, label: t('music_source_detail') },
       { action: 'removeCache', disabled: !has_url_cache, label: t('list_remove_cache') },
       // { action: 'musicSearch', label: t('music_search') },
       { action: 'dislike', disabled: hasDislike(musicInfo), label: t('dislike') },
@@ -141,6 +143,7 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
         props.onToggleSource(selectInfo)
         // setVIsibleMusicPosition(true)
         break
+      case 'openSourceVideo':
       case 'musicSourceDetail':
         props.onMusicSourceDetail(selectInfo)
         // setVIsibleMusicPosition(true)

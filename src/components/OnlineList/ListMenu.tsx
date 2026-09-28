@@ -61,7 +61,9 @@ export default forwardRef<ListMenuType, ListMenuProps>((props: ListMenuProps, re
       // { action: 'download', label: '下载' },
       { action: 'add', label: t('add_to') },
       { action: 'copyName', label: t('copy_name') },
-      { action: 'musicSourceDetail', label: t('music_source_detail') },
+      musicInfo.source == 'bili'
+        ? { action: 'openSourceVideo', label: t('open_source_video') }
+        : { action: 'musicSourceDetail', label: t('music_source_detail') },
       { action: 'removeCache', disabled: !has_url_cache, label: t('list_remove_cache') },
       { action: 'dislike', label: t('dislike'), disabled: hasDislike(musicInfo) },
     ]
@@ -93,6 +95,7 @@ export default forwardRef<ListMenuType, ListMenuProps>((props: ListMenuProps, re
       case 'copyName':
         props.onCopyName(selectInfo)
         break
+      case 'openSourceVideo':
       case 'musicSourceDetail':
         props.onMusicSourceDetail(selectInfo)
         // setVIsibleMusicPosition(true)

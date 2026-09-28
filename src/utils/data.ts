@@ -347,6 +347,10 @@ export const hasMusicUrlByMusic = async(musicInfo: LX.Music.MusicInfo) => {
 }
 export const clearMusicUrlByMusic = async(musicInfo: LX.Music.MusicInfo) => {
   await removeDataMultiple(qualitys.map(q => `${storageDataPrefix.musicUrl}${musicInfo.id}_${q}`))
+  if (musicInfo.source == 'bili') {
+    const { clearBiliAudioFiles } = await import('@/utils/musicSdk/bili/cache')
+    await clearBiliAudioFiles(String(musicInfo.meta.songId))
+  }
 }
 export const getMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality) => getData<string>(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`).then((url) => url ?? '')
 export const saveMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality, url: string) => saveData(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`, url)

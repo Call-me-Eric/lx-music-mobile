@@ -14,6 +14,8 @@ import {
   handleGetOnlinePicUrl,
   getCachedLyricInfo,
 } from './utils'
+import { getCachedAudioFile, isBiliCachedUrlUsable } from '@/utils/musicSdk/bili/cache'
+import { loadAccount } from '@/utils/musicSdk/bili/account'
 
 /* export const setMusicUrl = ({ musicInfo, type, url }: {
   musicInfo: LX.Music.MusicInfo
@@ -53,8 +55,17 @@ export const getMusicUrl = async({ musicInfo, quality, isRefresh, allowToggleSou
   //   // return Promise.reject(new Error('该歌曲没有可播放的音频'))
   // }
   const targetQuality = quality ?? getPlayQuality(settingState.setting['player.playQuality'], musicInfo)
+  if (musicInfo.source == 'bili') {
+    await loadAccount()
+    if (!isRefresh) {
+      const cachedFile = await getCachedAudioFile(String(musicInfo.meta.songId), targetQuality)
+      if (cachedFile) return cachedFile
+    }
+  }
   const cachedUrl = await getStoreMusicUrl(musicInfo, targetQuality)
-  if (cachedUrl && !isRefresh) return cachedUrl
+  if (cachedUrl && !isRefresh) {
+    if (musicInfo.source != 'bili' || await isBiliCachedUrlUsable(cachedUrl)) return cachedUrl
+  }
 
   return handleGetOnlineMusicUrl({ musicInfo, quality, onToggleSource, isRefresh, allowToggleSource }).then(({ url, quality: targetQuality, musicInfo: targetMusicInfo, isFromCache }) => {
     if (targetMusicInfo.id != musicInfo.id && !isFromCache) void saveMusicUrl(targetMusicInfo, targetQuality, url)

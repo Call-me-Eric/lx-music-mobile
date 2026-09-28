@@ -82,7 +82,11 @@ declare namespace LX {
       meta: MusicInfoMeta_mg
     }
 
-    type MusicInfoOnline = MusicInfo_online_common | MusicInfo_kg | MusicInfo_tx | MusicInfo_mg
+    interface MusicInfo_bili extends MusicInfoBase<'bili'> {
+      meta: MusicInfoMeta_online
+    }
+
+    type MusicInfoOnline = MusicInfo_online_common | MusicInfo_kg | MusicInfo_tx | MusicInfo_mg | MusicInfo_bili
     type MusicInfo = MusicInfoOnline | MusicInfoLocal
 
     interface LyricInfo {

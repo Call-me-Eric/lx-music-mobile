@@ -64,7 +64,9 @@ export const getMusicUrl = async({ musicInfo, quality, isRefresh, allowToggleSou
   }
   const cachedUrl = await getStoreMusicUrl(musicInfo, targetQuality)
   if (cachedUrl && !isRefresh) {
-    if (musicInfo.source != 'bili' || await isBiliCachedUrlUsable(cachedUrl)) return cachedUrl
+    // 换源得到的地址没有哔哩哔哩的 deadline，按普通缓存直接使用
+    const isOtherSourceUrl = musicInfo.source == 'bili' && /^https?:\/\//.test(cachedUrl) && !/[?&]deadline=/.test(cachedUrl)
+    if (musicInfo.source != 'bili' || isOtherSourceUrl || await isBiliCachedUrlUsable(cachedUrl)) return cachedUrl
   }
 
   return handleGetOnlineMusicUrl({ musicInfo, quality, onToggleSource, isRefresh, allowToggleSource }).then(({ url, quality: targetQuality, musicInfo: targetMusicInfo, isFromCache }) => {

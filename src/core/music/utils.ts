@@ -1,7 +1,7 @@
 import musicSdk, { findMusic } from '@/utils/musicSdk'
 import {
-  // getOtherSource as getOtherSourceFromStore,
-  // saveOtherSource as saveOtherSourceFromStore,
+  getOtherSource as getOtherSourceFromStore,
+  saveOtherSource as saveOtherSourceFromStore,
   getMusicUrl as getStoreMusicUrl,
   getPlayerLyric as getStoreLyric,
 } from '@/utils/data'
@@ -17,12 +17,17 @@ const getOtherSourcePromises = new Map()
 export const existTimeExp = /\[\d{1,2}:.*\d{1,4}\]/
 const otherSourceCache = new Map<LX.Music.MusicInfo | LX.Download.ListItem, LX.Music.MusicInfoOnline[]>()
 
+const otherSourceStoreId = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem) => {
+  return 'progress' in musicInfo ? musicInfo.metadata.musicInfo.id : musicInfo.id
+}
+
 export const getOtherSource = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh = false): Promise<LX.Music.MusicInfoOnline[]> => {
-  // if (!isRefresh) {
-  //   const cachedInfo = await getOtherSourceFromStore(musicInfo.id)
-  //   if (cachedInfo.length) return cachedInfo
-  // }
-  if (otherSourceCache.has(musicInfo)) return otherSourceCache.get(musicInfo)!
+  const storeId = otherSourceStoreId(musicInfo)
+  if (!isRefresh) {
+    const cachedInfo = await getOtherSourceFromStore(storeId)
+    if (cachedInfo.length) return cachedInfo
+    if (otherSourceCache.has(musicInfo)) return otherSourceCache.get(musicInfo)!
+  }
   let key: string
   let searchMusicInfo: {
     name: string
@@ -65,8 +70,8 @@ export const getOtherSource = async(musicInfo: LX.Music.MusicInfo | LX.Download.
     }).catch(reject).finally(() => {
       if (timeout) BackgroundTimer.clearTimeout(timeout)
     })
-  }).then((otherSource) => {
-    // if (otherSource.length) void saveOtherSourceFromStore(musicInfo.id, otherSource)
+  }).then(async(otherSource) => {
+    if (otherSource.length) await saveOtherSourceFromStore(storeId, otherSource)
     return otherSource
   }).finally(() => {
     if (getOtherSourcePromises.has(key)) getOtherSourcePromises.delete(key)
@@ -253,7 +258,7 @@ export const getOnlineOtherSourceMusicUrl = async({ musicInfos, quality, onToggl
     retryedSource.push(musicInfo.source)
     if (!assertApiSupport(musicInfo.source)) continue
     itemQuality = quality ?? getPlayQuality(settingState.setting['player.playQuality'], musicInfo)
-    if (!musicInfo.meta._qualitys[itemQuality]) continue
+    if (!musicInfo.meta._qualitys?.[itemQuality]) continue
 
     console.log('try toggle to: ', musicInfo.source, musicInfo.name, musicInfo.singer, musicInfo.interval)
     onToggleSource(musicInfo)
@@ -311,22 +316,31 @@ export const handleGetOnlineMusicUrl = async({ musicInfo, quality, onToggleSourc
     return { musicInfo, url, quality: type, isFromCache: false }
   }).catch(async(err: any) => {
     console.log(err)
-    if (musicInfo.source == 'bili' || !allowToggleSource || err.message == requestMsg.tooManyRequests) throw err
+    if (!allowToggleSource || err.message == requestMsg.tooManyRequests) throw err
     onToggleSource()
-    // eslint-disable-next-line @typescript-eslint/promise-function-async
-    return getOtherSource(musicInfo).then(otherSource => {
-      // console.log('find otherSource', otherSource.length)
-      if (otherSource.length) {
-        return getOnlineOtherSourceMusicUrl({
-          musicInfos: [...otherSource],
-          onToggleSource,
-          quality,
-          isRefresh,
-          retryedSource: [musicInfo.source],
-        })
+    const storeId = otherSourceStoreId(musicInfo)
+    const stored = isRefresh ? [] : await getOtherSourceFromStore(storeId)
+    const playOther = async(list: LX.Music.MusicInfoOnline[]) => {
+      if (!list.length) throw err
+      const result = await getOnlineOtherSourceMusicUrl({
+        musicInfos: [...list],
+        onToggleSource,
+        quality,
+        isRefresh,
+        retryedSource: [musicInfo.source],
+      })
+      const rest = list.filter(item => item.id != result.musicInfo.id)
+      await saveOtherSourceFromStore(storeId, [result.musicInfo, ...rest])
+      return result
+    }
+    if (stored.length) {
+      try {
+        return await playOther(stored)
+      } catch (fallbackErr: any) {
+        if (fallbackErr?.message == requestMsg.tooManyRequests) throw fallbackErr
       }
-      throw err
-    })
+    }
+    return playOther(await getOtherSource(musicInfo, true))
   })
 }
 
